@@ -56,11 +56,12 @@ public class OrderProcessingConsumer {
             else {
                 payment.setPaymentStatus("PAID");
 
-                restTemplate.put(USER_URL + "/update/" + payment.getUserId() + "/" + payment.getAmount(), null);
+                restTemplate.put(USER_URL + "/update/git" + payment.getUserId() + "/" + payment.getAmount(), null);
 
             }
         }
         paymentRepository.save(payment);
+        //git branch test
 
     }
 }
