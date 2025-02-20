@@ -7,6 +7,8 @@ import com.obito.Payment_Sevrvice.dto.UserEntity;
 import com.obito.Payment_Sevrvice.entity.Payment;
 import com.obito.Payment_Sevrvice.repository.PaymentRepository;
 import lombok.Builder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
@@ -17,14 +19,19 @@ import java.util.Date;
 @Component
 @Builder
 public class OrderProcessingConsumer {
-    public static final String USER_URL = "http://localhost:7071/user";
+    private static final Logger log = LoggerFactory.getLogger(OrderProcessingConsumer.class);
+
+    public static final String USER_URL = "http://USER-SERVICE/user";
     @Autowired
     PaymentRepository paymentRepository;
     @Autowired
     RestTemplate restTemplate;
-    @KafkaListener(topics = "ORDER_PAYMENT_TOPIC")
-    public void processOrder(String orderJsonString) throws JsonProcessingException {
+
+    //@KafkaListener(topics = "ORDER_PAYMENT_TOPIC1")
+    public String processOrder(String orderJsonString) throws JsonProcessingException {
+        log.info("Received order for processing: {}", orderJsonString);
         //order from kafka
+        System.out.println("inside payment service");
         Order order=new ObjectMapper().readValue(orderJsonString, Order.class);
 
         //build payment Request
@@ -49,7 +56,7 @@ public class OrderProcessingConsumer {
         }
         //check with available balance in user db for amount
         else{
-            UserEntity user=restTemplate.getForObject(USER_URL+"/get?id="+payment.getUserId(), UserEntity.class);
+            UserEntity user=restTemplate.getForObject("http://USER-SERVICE/user/get?id="+payment.getUserId(), UserEntity.class);
             if(user.getAmount()< payment.getAmount()){
                 throw new RuntimeException("Unsufficient Balance");
             }
@@ -62,6 +69,6 @@ public class OrderProcessingConsumer {
         }
         paymentRepository.save(payment);
         //git branch test
-
+        return "Success";
     }
 }
